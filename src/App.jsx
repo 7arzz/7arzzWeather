@@ -1,65 +1,36 @@
 import { useState } from "react";
-import "./App.css";
-function App() {
-  const [city, setCity] = useState("");
-  const [weather, setWeather] = useState(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const API_KEY = import.meta.env.VITE_API_KEY;
+import SearchBar from "./components/SearchBar";
+import WeatherCard from "./components/WeatherCard";
 
-  const getWeather = async () => {
+export default function App() {
+  const [weather, setWeather] = useState(null);
+
+  const API_KEY = "a1e31b59558f9a9fbe6088d4ad5c356f";
+
+  const getWeather = async (city) => {
     if (!city) return;
 
-    setLoading(true);
-    setError("");
-    setWeather(null);
+    const res = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`,
+    );
 
-    try {
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=a1e31b59558f9a9fbe6088d4ad5c356f&units=metric`,
-      );
+    const data = await res.json();
 
-      if (!response.ok) {
-        throw new Error("Kota tidak ditemukan");
-      }
-
-      const data = await response.json();
-      setWeather(data);
-    } catch (err) {
-      setError(err.message);
+    if (data.cod !== 200) {
+      alert("Kota tidak ditemukan");
+      return;
     }
 
-    setLoading(false);
+    setWeather(data);
   };
 
   return (
-    <div className="container">
-      <h1>7arzz Weather </h1>
+    <div style={{ textAlign: "center", marginTop: "50px" }}>
+      <h1>Weather App</h1>
 
-      <div className="input-group">
-        <input
-          type="text"
-          placeholder="Masukkan kota"
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-        />
-        <button onClick={getWeather}>Cek</button>
-      </div>
+      <SearchBar onSearch={getWeather} />
 
-      {loading && <p>Loading...</p>}
-      {error && <p className="error">{error}</p>}
-
-      {weather && (
-        <div className="weather-box">
-          <h2>{weather.name}</h2>
-          <p>🌡 {weather.main.temp}°C</p>
-          <p>🌥 {weather.weather[0].description}</p>
-        </div>
-      )}
+      {weather && <WeatherCard data={weather} />}
     </div>
   );
 }
-
-export default App;
-// const API_KEY = import.meta.env.VITE_API_KEY;
-// console.log("API KEY:", API_KEY);
